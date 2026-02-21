@@ -1,3 +1,4 @@
+import 'package:ar_practice_gradlefixing/arscreen.dart';
 import 'package:ar_practice_gradlefixing/helloworld.dart';
 import 'package:flutter/material.dart';
 
@@ -16,7 +17,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: HelloWorld(),
+      home: ARPaintingWithAnimatedGifScreen(),
     );
   }
 }

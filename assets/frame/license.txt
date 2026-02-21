@@ -1,0 +1,11 @@
+Model Information:
+* title:	Frame03
+* source:	https://sketchfab.com/3d-models/frame03-f2a37b4ca65f465fa5bf69f60aaa1f40
+* author:	toya_mimura (https://sketchfab.com/toya_mimura)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Frame03" (https://sketchfab.com/3d-models/frame03-f2a37b4ca65f465fa5bf69f60aaa1f40) by toya_mimura (https://sketchfab.com/toya_mimura) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

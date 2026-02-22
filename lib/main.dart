@@ -1,5 +1,4 @@
 import 'package:ar_practice_gradlefixing/arscreen.dart';
-import 'package:ar_practice_gradlefixing/helloworld.dart';
 import 'package:flutter/material.dart';
 
 void main() {

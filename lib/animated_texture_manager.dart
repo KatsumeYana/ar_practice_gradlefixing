@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:arcore_flutter_plugin/arcore_flutter_plugin.dart';
 
 class AnimatedTextureManager {
   final List<Uint8List> frames;

@@ -11,23 +11,23 @@ class ARPaintingWithAnimatedGifScreen extends StatefulWidget {
 
   @override
   // ignore: library_private_types_in_public_api
-  _ARPaintingWithAnimatedGifScreenState createState() => 
+  _ARPaintingWithAnimatedGifScreenState createState() =>
       _ARPaintingWithAnimatedGifScreenState();
 }
 
-class _ARPaintingWithAnimatedGifScreenState 
+class _ARPaintingWithAnimatedGifScreenState
     extends State<ARPaintingWithAnimatedGifScreen> {
   late ArCoreController arCoreController;
   late AnimatedTextureManager textureManager;
-  
-  // Store node information
+
   String? _currentNodeName;
   vector.Vector3? _nodePosition;
   vector.Vector4? _nodeRotation;
   vector.Vector3? _nodeScale;
-  
+
   List<Uint8List> gifFrames = [];
   bool isLoading = true;
+  bool _objectPlaced = false;
 
   @override
   void initState() {
@@ -35,11 +35,10 @@ class _ARPaintingWithAnimatedGifScreenState
     _loadGifFrames();
   }
 
-  /// Loads GIF frames from assets
   Future<void> _loadGifFrames() async {
     try {
       gifFrames = await GifFrameExtractor.extractGifFrames('assets/kurukuru-kururing.gif');
-      
+
       if (gifFrames.isNotEmpty) {
         setState(() {
           isLoading = false;
@@ -52,42 +51,42 @@ class _ARPaintingWithAnimatedGifScreenState
     }
   }
 
-  /// Callback when ARCore view is created
   void _onArCoreViewCreated(ArCoreController controller) {
     arCoreController = controller;
-    arCoreController.onPlaneTap = _handleOnPlaneTap;
+    arCoreController.onPlaneDetected = _onPlaneDetected;
   }
 
-  /// Handles tap on detected plane
-  void _handleOnPlaneTap(List<ArCoreHitTestResult> hits) {
-    if (hits.isEmpty || gifFrames.isEmpty) return;
-    
-    final hit = hits.first;
-    _addAnimatedPainting(hit);
+  void _onPlaneDetected(ArCorePlane plane) {
+    print('Plane detected - Type: ${plane.type}, Position: ${plane.centerPose}');
+    if (!_objectPlaced && plane.type == ArCorePlaneType.VERTICAL) {
+      print('Vertical plane detected! Adding painting...');
+      _addAnimatedPainting(plane);
+      setState(() {
+        _objectPlaced = true;
+      });
+    } else if (plane.type != ArCorePlaneType.VERTICAL) {
+      print('Detected plane is not vertical (type: ${plane.type})');
+    }
   }
 
-  /// Adds a painting with animated GIF texture
-  void _addAnimatedPainting(ArCoreHitTestResult hit) {
-    // Store node information for re-adding
-    _nodePosition = hit.pose.translation;
-    _nodeRotation = hit.pose.rotation;
+  void _addAnimatedPainting(ArCorePlane plane) {
+    final planePose = plane.centerPose;
+    if (planePose == null) return;
+    _nodePosition = vector.Vector3(planePose.translation.x, planePose.translation.y, planePose.translation.z);
+    _nodeRotation = vector.Vector4(planePose.rotation.x, planePose.rotation.y, planePose.rotation.z, planePose.rotation.w);
     _nodeScale = vector.Vector3(0.5, 0.5, 0.5);
     _currentNodeName = 'animated_painting_${DateTime.now().millisecondsSinceEpoch}';
 
-    // 3d cube placeholder for the painting
-    // Create the material with the first frame
     final material = ArCoreMaterial(
       color: Colors.white,
       textureBytes: gifFrames[0],
     );
 
-    // Create the 3D shape (cube)
     final cube = ArCoreCube(
       materials: [material],
       size: _nodeScale!,
     );
 
-    // Create the node
     final node = ArCoreNode(
       shape: cube,
       position: _nodePosition!,
@@ -95,18 +94,14 @@ class _ARPaintingWithAnimatedGifScreenState
       name: _currentNodeName,
     );
 
-    // Add the node to the scene
-    arCoreController.addArCoreNodeWithAnchor(node);
+    arCoreController.addArCoreNode(node);
 
-    // Initialize the texture manager
     _initializeTextureAnimation();
   }
 
-  /// Initializes the texture animation
   void _initializeTextureAnimation() {
     if (_currentNodeName == null || gifFrames.isEmpty) return;
 
-    // Create the texture manager
     textureManager = AnimatedTextureManager(
       frames: gifFrames,
       frameRateMs: 100,
@@ -118,31 +113,26 @@ class _ARPaintingWithAnimatedGifScreenState
     textureManager.startAnimation();
   }
 
-  /// Updates the node's texture by removing and re-adding it
   void _updateNodeTexture(Uint8List frameData) {
-    if (_currentNodeName == null || 
-        _nodePosition == null || 
+    if (_currentNodeName == null ||
+        _nodePosition == null ||
         _nodeRotation == null ||
         _nodeScale == null) {
       return;
     }
 
-    // Remove the old node
     arCoreController.removeNode(nodeName: _currentNodeName!);
 
-    // Create a new material with the updated texture
     final updatedMaterial = ArCoreMaterial(
       color: Colors.white,
       textureBytes: frameData,
     );
 
-    // Create a new shape with the updated material
     final cube = ArCoreCube(
       materials: [updatedMaterial],
       size: _nodeScale!,
     );
 
-    // Create a new node with the same position and rotation
     final newNode = ArCoreNode(
       shape: cube,
       position: _nodePosition!,
@@ -150,11 +140,9 @@ class _ARPaintingWithAnimatedGifScreenState
       name: _currentNodeName,
     );
 
-    // Add the new node
-    arCoreController.addArCoreNodeWithAnchor(newNode);
+    arCoreController.addArCoreNode(newNode);
   }
 
-  /// Shows error message
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
@@ -209,21 +197,24 @@ class _ARPaintingWithAnimatedGifScreenState
                 ],
               ),
             )
-          : ArCoreView(
-              onArCoreViewCreated: _onArCoreViewCreated,
-              enableTapRecognizer: true,
-            ),
-      floatingActionButton: isLoading
-          ? null
-          : FloatingActionButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Tap on a plane to place the animated painting'),
+          : Stack(
+              children: [
+                ArCoreView(
+                  onArCoreViewCreated: _onArCoreViewCreated,
+                  enableUpdateListener: true,
+                ),
+                if (!_objectPlaced)
+                  const Center(
+                    child: Text(
+                      'Move your phone to detect a wall',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                );
-              },
-              child: const Icon(Icons.info),
+              ],
             ),
     );
   }

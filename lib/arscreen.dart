@@ -65,7 +65,7 @@ class _ARPaintingWithAnimatedGifScreenState
         _objectPlaced = true;
       });
     } else if (plane.type != ArCorePlaneType.VERTICAL) {
-      print('Detected plane is not vertical (type: ${plane.type})');
+      _showError('Detected plane is not vertical (type: ${plane.type})');
     }
   }
 
@@ -74,7 +74,7 @@ class _ARPaintingWithAnimatedGifScreenState
     if (planePose == null) return;
     _nodePosition = vector.Vector3(planePose.translation.x, planePose.translation.y, planePose.translation.z);
     _nodeRotation = vector.Vector4(planePose.rotation.x, planePose.rotation.y, planePose.rotation.z, planePose.rotation.w);
-    _nodeScale = vector.Vector3(0.5, 0.5, 0.5);
+    _nodeScale = vector.Vector3(0.2, 0.2, 0.2);
     _currentNodeName = 'animated_painting_${DateTime.now().millisecondsSinceEpoch}';
 
     final material = ArCoreMaterial(

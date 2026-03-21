@@ -21,7 +21,7 @@ class _ARPaintingWithAnimatedGifScreenState
   late AnimatedTextureManager textureManager;
 
   String? _currentNodeName;
-  vector.Vector3? _nodePosition;
+  vector.Vector3? _nodePosition; //wa
   vector.Vector4? _nodeRotation;
   vector.Vector3? _nodeScale;
 
